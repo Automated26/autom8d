@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+  <title>Autom8d — Coming Soon</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Outfit:wght@200;300;400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --ink: #060d08;
+      --green: #4ade80;
+      --green-light: #86efac;
+      --white: #e8f5ec;
+      --muted: rgba(232,245,236,0.5);
+      --dim: rgba(232,245,236,0.22);
+      --future: 'Orbitron', sans-serif;
+      --sans: 'Outfit', sans-serif;
+    }
+    html { scroll-behavior: smooth; }
+    body { min-height:100vh; background:var(--ink); color:var(--white); font-family:var(--sans); -webkit-font-smoothing:antialiased; }
+
+    /* BG */
+    .bg-grid {
+      position:fixed; inset:0; z-index:0;
+      background-image: linear-gradient(rgba(74,222,128,0.04) 1px,transparent 1px), linear-gradient(90deg,rgba(74,222,128,0.04) 1px,transparent 1px);
+      background-size:60px 60px;
+    }
+    .orb { position:fixed; border-radius:50%; filter:blur(100px); pointer-events:none; z-index:0; }
+    .orb-1 { width:500px; height:500px; background:radial-gradient(circle,rgba(74,222,128,0.08) 0%,transparent 70%); top:-150px; left:50%; transform:translateX(-50%); }
+    .orb-2 { width:300px; height:300px; background:radial-gradient(circle,rgba(20,180,80,0.06) 0%,transparent 70%); bottom:-80px; right:-80px; animation:breathe2 6s ease-in-out infinite reverse; }
+    #neural { position:fixed; inset:0; z-index:0; pointer-events:none; }
+    .corner { position:fixed; width:20px; height:20px; border-color:rgba(74,222,128,0.2); border-style:solid; z-index:2; }
+    .c-tl { top:20px; left:20px; border-width:1px 0 0 1px; }
+    .c-tr { top:20px; right:20px; border-width:1px 1px 0 0; }
+    .c-bl { bottom:20px; left:20px; border-width:0 0 1px 1px; }
+    .c-br { bottom:20px; right:20px; border-width:0 1px 1px 0; }
+
+    /* PAGE */
+    .page { position:relative; z-index:1; min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:40px 24px 64px; }
+
+    /* LOGO */
+    .logo-wrap { width:100%; display:flex; flex-direction:column; align-items:center; margin-bottom:20px; animation:fadeDown 0.7s ease both; gap:12px; }
+    .logo {
+      font-family:'Syne',sans-serif; font-size:32px; font-weight:800; line-height:1;
+      letter-spacing:0.15em; text-transform:uppercase;
+      background:linear-gradient(90deg,#4ade80 0%,#86efac 40%,#4ade80 60%,#22c55e 100%);
+      background-size:200% auto;
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+      animation:shimmer 2.5s linear infinite;
+      filter:drop-shadow(0 0 18px rgba(74,222,128,0.45));
+    }
+    .logo-8 { -webkit-text-fill-color:#ffffff; filter:none; }
+    .logo-cursor { -webkit-text-fill-color:var(--green); margin-left:2px; animation:blink 1.1s step-start infinite; }
+    .logo-line {
+      width:100%; max-width:280px; height:1px;
+      background:linear-gradient(90deg,transparent,var(--green),transparent);
+      animation:scanline 3s ease-in-out infinite; opacity:0.6;
+    }
+
+    /* MARQUEE */
+    .marquee-wrap {
+      width:100vw; overflow:hidden; margin-bottom:32px;
+      opacity:0; animation:fadeUp 0.6s 0.15s ease forwards;
+      mask-image:linear-gradient(90deg,transparent,black 15%,black 85%,transparent);
+      -webkit-mask-image:linear-gradient(90deg,transparent,black 15%,black 85%,transparent);
+    }
+    .marquee-track { display:flex; width:max-content; animation:marqueeScroll 22s linear infinite; }
+    .marquee-item { font-size:9px; font-weight:400; letter-spacing:0.3em; text-transform:uppercase; color:rgba(74,222,128,0.45); padding:0 20px; white-space:nowrap; }
+    .marquee-dot { color:rgba(74,222,128,0.25); line-height:1; }
+
+    /* MAIN */
+    .main { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; width:100%; max-width:600px; }
+    .eyebrow { font-size:10px; font-weight:400; letter-spacing:0.35em; text-transform:uppercase; color:var(--green); margin-bottom:24px; opacity:0; animation:fadeUp 0.6s 0.2s ease forwards; }
+    .headline {
+      font-family:var(--future); font-size:clamp(32px,9vw,88px); font-weight:900;
+      line-height:1; letter-spacing:-0.01em; text-transform:uppercase; margin-bottom:8px;
+      opacity:0; animation:fadeUp 0.7s 0.4s ease forwards;
+    }
+    .headline-green { color:var(--green); display:block; text-shadow:0 0 40px rgba(74,222,128,0.3); }
+    .headline-outline { -webkit-text-stroke:1px rgba(232,245,236,0.22); color:transparent; display:block; }
+    .divider {
+      width:1px; height:48px;
+      background:linear-gradient(to bottom,transparent,var(--green),transparent);
+      margin:28px auto; opacity:0;
+      animation:fadeUp 0.6s 0.6s ease forwards, dividerPulse 4s ease-in-out infinite;
+      box-shadow:0 0 8px 2px rgba(74,222,128,0.3);
+    }
+    .subline { font-size:14px; font-weight:300; line-height:1.8; color:var(--muted); max-width:480px; margin-bottom:40px; padding:0 8px; opacity:0; animation:fadeUp 0.6s 0.7s ease forwards; }
+
+    /* COUNTDOWN */
+    .countdown { display:flex; align-items:flex-start; justify-content:center; gap:4px; width:100%; margin-bottom:40px; opacity:0; animation:fadeUp 0.6s 0.9s ease forwards; }
+    .cd-block {
+      display:flex; flex-direction:column; align-items:center; flex:1; max-width:90px;
+      background:rgba(74,222,128,0.04); border:1px solid rgba(74,222,128,0.12);
+      padding:16px 8px 12px; animation:cdGlow 3s ease-in-out infinite;
+    }
+    .cd-sep { font-family:var(--future); font-size:clamp(20px,5vw,32px); font-weight:700; color:rgba(74,222,128,0.3); padding-top:12px; flex-shrink:0; }
+    .cd-num { font-family:var(--future); font-size:clamp(26px,7vw,48px); font-weight:900; color:var(--white); line-height:1; margin-bottom:8px; }
+    .cd-label { font-size:8px; font-weight:400; letter-spacing:0.2em; text-transform:uppercase; color:var(--dim); }
+
+    /* FORM */
+    .form-wrap { width:100%; max-width:480px; opacity:0; animation:fadeUp 0.6s 1.1s ease forwards; }
+    .form-label { font-size:12px; font-weight:300; letter-spacing:0.1em; color:var(--muted); text-align:center; margin-bottom:14px; }
+    .form-row { display:flex; flex-direction:column; border:1px solid rgba(74,222,128,0.18); overflow:hidden; transition:border-color 0.3s,box-shadow 0.3s; }
+    .form-row:focus-within { border-color:var(--green); box-shadow:0 0 24px rgba(74,222,128,0.1); }
+    .form-input { width:100%; background:rgba(74,222,128,0.03); border:none; border-bottom:1px solid rgba(74,222,128,0.1); outline:none; font-family:var(--sans); font-size:15px; font-weight:300; color:var(--white); padding:18px 20px; caret-color:var(--green); }
+    .form-input::placeholder { color:var(--dim); }
+    .form-btn { width:100%; padding:18px; background:var(--green); border:none; font-family:var(--sans); font-size:12px; font-weight:600; letter-spacing:0.2em; text-transform:uppercase; color:var(--ink); cursor:pointer; transition:background 0.2s; }
+    .form-btn:hover { background:var(--green-light); }
+    .form-success { display:none; align-items:center; justify-content:center; gap:10px; font-size:14px; font-weight:300; color:var(--green); padding:20px 0; text-align:center; }
+    .form-success-icon { width:22px; height:22px; border:1px solid var(--green); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; flex-shrink:0; }
+
+    /* STATUS */
+    .status { margin-top:28px; display:flex; align-items:center; gap:8px; font-size:10px; font-weight:300; letter-spacing:0.2em; text-transform:uppercase; color:var(--dim); opacity:0; animation:fadeUp 0.6s 1.3s ease forwards; }
+    .status-dot { width:6px; height:6px; border-radius:50%; background:var(--green); animation:dividerPulse 4s ease-in-out infinite; }
+
+    /* TRUST */
+    .trust { margin-top:36px; display:flex; flex-direction:column; align-items:center; gap:14px; opacity:0; animation:fadeUp 0.6s 1.5s ease forwards; width:100%; }
+    .trust-label { font-size:9px; letter-spacing:0.25em; text-transform:uppercase; color:var(--dim); }
+    .trust-logos { display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:6px; width:100%; max-width:520px; }
+    .trust-pill { font-size:9px; font-weight:500; letter-spacing:0.18em; text-transform:uppercase; color:rgba(232,245,236,0.3); border:1px solid rgba(74,222,128,0.1); padding:5px 12px; transition:color 0.3s,border-color 0.3s; cursor:default; }
+    .trust-pill:hover { color:var(--green); border-color:rgba(74,222,128,0.35); }
+
+    /* KAI */
+    #kai-bubble { position:fixed; bottom:28px; right:28px; z-index:500; display:flex; flex-direction:column; align-items:flex-end; gap:10px; }
+    .kai-nudge { background:rgba(8,15,10,0.95); border:1px solid rgba(74,222,128,0.25); padding:12px 16px; font-size:13px; font-weight:300; color:var(--white); max-width:210px; text-align:right; box-shadow:0 8px 32px rgba(0,0,0,0.5); opacity:0; transition:opacity 0.5s; position:relative; }
+    .kai-nudge.show { opacity:1; }
+    .kai-nudge::after { content:''; position:absolute; bottom:-5px; right:20px; width:8px; height:8px; background:rgba(8,15,10,0.95); border-right:1px solid rgba(74,222,128,0.25); border-bottom:1px solid rgba(74,222,128,0.25); transform:rotate(45deg); }
+    .kai-nudge-label { font-size:9px; letter-spacing:0.2em; text-transform:uppercase; color:var(--green); margin-bottom:4px; }
+    #kai-fab { width:54px; height:54px; border-radius:50%; background:var(--green); border:none; display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 8px 28px rgba(74,222,128,0.35); transition:transform 0.2s,box-shadow 0.2s; position:relative; animation:fadeUp 0.5s 2.8s ease both; opacity:0; }
+    #kai-fab:hover { transform:scale(1.08); box-shadow:0 12px 40px rgba(74,222,128,0.5); }
+    #kai-fab svg { width:22px; height:22px; color:#060d08; }
+    .kai-fab-dot { position:absolute; top:2px; right:2px; width:10px; height:10px; background:var(--white); border-radius:50%; border:2px solid var(--green); animation:blink 2s ease-in-out infinite; }
+    #kai-panel { position:fixed; bottom:96px; right:28px; z-index:500; width:320px; max-height:460px; background:#080f0a; border:1px solid rgba(74,222,128,0.25); display:flex; flex-direction:column; box-shadow:0 24px 60px rgba(0,0,0,0.7); transform:scale(0.92) translateY(12px); transform-origin:bottom right; opacity:0; pointer-events:none; transition:opacity 0.3s,transform 0.3s; }
+    #kai-panel.open { opacity:1; transform:scale(1) translateY(0); pointer-events:all; }
+    .kp-head { display:flex; align-items:center; gap:12px; padding:16px 18px; border-bottom:1px solid rgba(74,222,128,0.1); background:rgba(74,222,128,0.04); flex-shrink:0; }
+    .kp-av { width:32px; height:32px; border-radius:50%; background:linear-gradient(135deg,#0d2318,#1a3525); border:1px solid rgba(74,222,128,0.4); display:flex; align-items:center; justify-content:center; font-family:var(--future); font-size:11px; color:var(--green); flex-shrink:0; position:relative; }
+    .kp-av::after { content:''; position:absolute; bottom:-1px; right:-1px; width:8px; height:8px; background:var(--green); border-radius:50%; border:2px solid #080f0a; }
+    .kp-info { flex:1; }
+    .kp-name { font-size:13px; font-weight:400; color:var(--white); }
+    .kp-status { font-size:9px; letter-spacing:0.12em; color:var(--green); }
+    .kp-close { background:none; border:none; color:rgba(232,245,236,0.3); font-size:16px; cursor:pointer; padding:2px; transition:color 0.2s; }
+    .kp-close:hover { color:var(--white); }
+    .kp-msgs { flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:12px; scrollbar-width:thin; scrollbar-color:rgba(74,222,128,0.1) transparent; }
+    .kp-msg { display:flex; gap:8px; animation:fadeUp 0.3s ease both; }
+    .kp-msg.user { flex-direction:row-reverse; }
+    .kp-msg-av { width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:9px; flex-shrink:0; border:1px solid rgba(74,222,128,0.2); font-family:var(--future); }
+    .kp-msg.bot .kp-msg-av { color:var(--green); }
+    .kp-msg.user .kp-msg-av { background:var(--green); color:#060d08; font-weight:700; }
+    .kp-bubble { max-width:220px; padding:10px 14px; font-size:13px; font-weight:300; line-height:1.65; }
+    .kp-msg.bot .kp-bubble { background:rgba(255,255,255,0.04); border:1px solid rgba(74,222,128,0.1); color:rgba(232,245,236,0.8); }
+    .kp-msg.user .kp-bubble { background:var(--green); color:#060d08; font-weight:400; }
+    .kp-dots { display:flex; gap:4px; align-items:center; padding:4px 0; }
+    .kp-dots span { width:5px; height:5px; border-radius:50%; background:var(--green); opacity:0.4; animation:dotBounce 1.2s ease-in-out infinite; }
+    .kp-dots span:nth-child(2){ animation-delay:0.2s; } .kp-dots span:nth-child(3){ animation-delay:0.4s; }
+    .kp-input-row { display:flex; border-top:1px solid rgba(74,222,128,0.1); flex-shrink:0; }
+    .kp-input { flex:1; background:transparent; border:none; outline:none; font-family:var(--sans); font-size:13px; font-weight:300; color:var(--white); padding:14px 16px; caret-color:var(--green); }
+    .kp-input::placeholder { color:rgba(232,245,236,0.2); }
+    .kp-send { width:48px; background:transparent; border:none; border-left:1px solid rgba(74,222,128,0.1); color:rgba(232,245,236,0.3); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background 0.2s,color 0.2s; }
+    .kp-send:hover { background:var(--green); color:#060d08; }
+    .kp-send svg { width:14px; height:14px; }
+
+    /* ANIMATIONS */
+    @keyframes fadeUp   { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes fadeDown { from{opacity:0;transform:translateY(-12px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes blink    { 0%,100%{opacity:1} 50%{opacity:0} }
+    @keyframes shimmer  { 0%{background-position:200% center} 100%{background-position:-200% center} }
+    @keyframes scanline { 0%,100%{opacity:0.3;max-width:100px} 50%{opacity:0.8;max-width:280px} }
+    @keyframes marqueeScroll { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+    @keyframes breathe2 { 0%,100%{opacity:0.3;transform:scale(1)} 50%{opacity:0.55;transform:scale(1.07)} }
+    @keyframes dividerPulse { 0%,100%{opacity:0.4;box-shadow:0 0 6px 1px rgba(74,222,128,0.2)} 50%{opacity:1;box-shadow:0 0 18px 4px rgba(74,222,128,0.6)} }
+    @keyframes cdGlow   { 0%,100%{border-color:rgba(74,222,128,0.12);box-shadow:none} 50%{border-color:rgba(74,222,128,0.4);box-shadow:0 0 20px rgba(74,222,128,0.08),inset 0 0 12px rgba(74,222,128,0.05)} }
+    @keyframes dotBounce{ 0%,80%,100%{transform:scale(1);opacity:0.4} 40%{transform:scale(1.4);opacity:1} }
+
+    /* DESKTOP */
+    @media(min-width:600px){
+      .page { padding:48px 40px 72px; }
+      .logo { font-size:48px; letter-spacing:0.18em; }
+      .logo-line { max-width:420px; }
+      .form-row { flex-direction:row; }
+      .form-input { border-bottom:none; border-right:1px solid rgba(74,222,128,0.1); }
+      .form-btn { width:auto; padding:0 32px; white-space:nowrap; }
+      .cd-block { max-width:100px; }
+    }
+    @media(max-width:480px){
+      #kai-panel { width:calc(100vw - 32px); right:16px; }
+      #kai-bubble { right:16px; bottom:20px; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="neural"></canvas>
+  <div class="bg-grid"></div>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="corner c-tl"></div>
+  <div class="corner c-tr"></div>
+  <div class="corner c-bl"></div>
+  <div class="corner c-br"></div>
+
+  <div class="page">
+
+    <!-- LOGO -->
+    <div class="logo-wrap">
+      <div class="logo">AUTOM<span class="logo-8">8</span>D<span class="logo-cursor">_</span></div>
+      <div class="logo-line"></div>
+    </div>
+
+    <!-- MARQUEE -->
+    <div class="marquee-wrap">
+      <div class="marquee-track">
+        <span class="marquee-item">AI Automation</span><span class="marquee-dot">&nbsp;·&nbsp;</span>
+        <span class="marquee-item">Intelligent Workflows</span><span class="marquee-dot">&nbsp;·&nbsp;</span>
+        <span class="marquee-item">Lead Qualification</span><span class="marquee-dot">&nbsp;·&nbsp;</span>
+        <span class="marquee-item">Smart Follow-Up</span><span class="marquee-dot">&nbsp;·&nbsp;</span>
+        <span class="marquee-item">Business Intelligence</span><span class="marquee-dot">&nbsp;·&nbsp;</span>
+        <span class="marquee-item">Scale Without Hiring</span><span class="marquee-dot">&nbsp;·&nbsp;</span>
+        <span class="marquee-item">24/7 Autonomous Systems</span><span class="marquee-dot">&nbsp;·&nbsp;</span>
+        <span class="marquee-item">AI Automation</span><span class="marquee-dot">&nbsp;·&nbsp;</span>
+        <span class="marquee-item">Intelligent Workflows</span><span class="marquee-dot">&nbsp;·&nbsp;</span>
+        <span class="marquee-item">Lead Qualification</span><span class="marquee-dot">&nbsp;·&nbsp;</span>
+        <span class="marquee-item">Smart Follow-Up</span><span class="marquee-dot">&nbsp;·&nbsp;</span>
+        <span class="marquee-item">Business Intelligence</span><span class="marquee-dot">&nbsp;·&nbsp;</span>
+        <span class="marquee-item">Scale Without Hiring</span><span class="marquee-dot">&nbsp;·&nbsp;</span>
+        <span class="marquee-item">24/7 Autonomous Systems</span><span class="marquee-dot">&nbsp;·&nbsp;</span>
+      </div>
+    </div>
+
+    <!-- MAIN -->
+    <div class="main">
+      <div class="eyebrow">Something powerful is coming</div>
+      <h1 class="headline">
+        <span class="headline-outline">Your Business</span>
+        <span class="headline-green">On Autopilot</span>
+        <span class="headline-outline">24 / 7</span>
+      </h1>
+      <div class="divider"></div>
+      <p class="subline">
+        Stop losing leads, wasting hours on repetitive tasks, and paying for work AI can do better. Autom8d puts your business on autopilot — so you scale faster, with less.
+      </p>
+
+      <!-- COUNTDOWN -->
+      <div class="countdown">
+        <div class="cd-block" style="animation-delay:0s">
+          <div class="cd-num" id="cd-days">00</div>
+          <div class="cd-label">Days</div>
+        </div>
+        <div class="cd-sep">:</div>
+        <div class="cd-block" style="animation-delay:0.75s">
+          <div class="cd-num" id="cd-hours">00</div>
+          <div class="cd-label">Hours</div>
+        </div>
+        <div class="cd-sep">:</div>
+        <div class="cd-block" style="animation-delay:1.5s">
+          <div class="cd-num" id="cd-mins">00</div>
+          <div class="cd-label">Mins</div>
+        </div>
+        <div class="cd-sep">:</div>
+        <div class="cd-block" style="animation-delay:2.25s">
+          <div class="cd-num" id="cd-secs">00</div>
+          <div class="cd-label">Secs</div>
+        </div>
+      </div>
+
+      <!-- FORM -->
+      <div class="form-wrap">
+        <p class="form-label">Be first to know when we launch</p>
+        <form class="form-row" id="form-row">
+          <input class="form-input" id="email-input" name="email" type="email" placeholder="Enter your email address" required/>
+          <button class="form-btn" type="submit" id="notify-btn">Notify Me</button>
+        </form>
+        <div class="form-success" id="form-success">
+          <div class="form-success-icon">✓</div>
+          You are on the list. We will be in touch soon.
+        </div>
+      </div>
+
+      <!-- STATUS -->
+      <div class="status">
+        <span class="status-dot"></span>
+        In Development
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // NEURAL CANVAS
+    (function(){
+      var canvas = document.getElementById('neural');
+      var ctx = canvas.getContext('2d');
+      var nodes = [], NUM = 55, MAX_DIST = 140;
+      function spawnNodes(){
+        nodes = [];
+        for(var i=0;i<NUM;i++) nodes.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,vx:(Math.random()-0.5)*0.4,vy:(Math.random()-0.5)*0.4,r:1.5+Math.random()*1.5});
+      }
+      function setSize(){ canvas.width=window.innerWidth; canvas.height=window.innerHeight; }
+      function init(){ setSize(); spawnNodes(); draw(); }
+      window.addEventListener('resize',setSize);
+      if(document.readyState==='complete'){init();}else{window.addEventListener('load',init);}
+      function draw(){
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        nodes.forEach(function(n){ n.x+=n.vx; n.y+=n.vy; if(n.x<0||n.x>canvas.width)n.vx*=-1; if(n.y<0||n.y>canvas.height)n.vy*=-1; });
+        for(var i=0;i<nodes.length;i++){
+          for(var j=i+1;j<nodes.length;j++){
+            var dx=nodes[i].x-nodes[j].x,dy=nodes[i].y-nodes[j].y,dist=Math.sqrt(dx*dx+dy*dy);
+            if(dist<MAX_DIST){ ctx.beginPath(); ctx.moveTo(nodes[i].x,nodes[i].y); ctx.lineTo(nodes[j].x,nodes[j].y); ctx.strokeStyle='rgba(74,222,128,'+((1-dist/MAX_DIST)*0.11)+')'; ctx.lineWidth=1; ctx.stroke(); }
+          }
+        }
+        nodes.forEach(function(n){ ctx.beginPath(); ctx.arc(n.x,n.y,n.r,0,Math.PI*2); ctx.fillStyle='rgba(74,222,128,0.18)'; ctx.fill(); });
+        requestAnimationFrame(draw);
+      }
+    })();
+
+    // COUNTDOWN
+    var launch = new Date(Date.now() + 20*24*60*60*1000);
+    function pad(n){return String(n).padStart(2,'0');}
+    function tick(){
+      var diff=Math.max(0,launch-new Date());
+      document.getElementById('cd-days').textContent=pad(Math.floor(diff/86400000));
+      document.getElementById('cd-hours').textContent=pad(Math.floor((diff%86400000)/3600000));
+      document.getElementById('cd-mins').textContent=pad(Math.floor((diff%3600000)/60000));
+      document.getElementById('cd-secs').textContent=pad(Math.floor((diff%60000)/1000));
+    }
+    tick(); setInterval(tick,1000);
+
+    // EMAIL FORM
+    document.getElementById('form-row').addEventListener('submit',function(e){
+      e.preventDefault();
+      var email=document.getElementById('email-input').value.trim();
+      if(!email||!email.includes('@'))return;
+      var btn=document.getElementById('notify-btn');
+      btn.textContent='Sending...'; btn.style.opacity='0.7';
+      fetch('https://api.web3forms.com/submit',{
+        method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},
+        body:JSON.stringify({access_key:'0544b877-360b-4daa-84fd-7e9cf50a5a07',subject:'New Notify Me Signup Autom8d',from_name:'Autom8d Coming Soon',email:email,message:email+' wants to be notified at launch.'})
+      }).then(function(r){return r.json();}).then(function(d){
+        if(d.success){document.getElementById('form-row').style.display='none';document.getElementById('form-success').style.display='flex';}
+        else{btn.textContent='Try Again';btn.style.opacity='1';}
+      }).catch(function(){btn.textContent='Try Again';btn.style.opacity='1';});
+    });
+
+    // KAI CHAT
+    document.addEventListener('DOMContentLoaded',function(){
+      var kaiPanel=document.getElementById('kai-panel'),kpMsgs=document.getElementById('kp-msgs'),kpInput=document.getElementById('kp-input'),kaiFab=document.getElementById('kai-fab'),kpClose=document.getElementById('kp-close'),kaiNudge=document.getElementById('kai-nudge'),kpOpen=false,kpData={name:'',email:'',phone:''};
+      setTimeout(function(){kaiNudge.classList.add('show');},3500);
+      function toggleKai(){
+        kpOpen=!kpOpen; kaiPanel.classList.toggle('open',kpOpen);
+        if(kpOpen)kaiNudge.classList.remove('show');
+        if(kpOpen&&kpMsgs.children.length===0){setTimeout(function(){addKpMsg('bot',"Hi there! I'm Kai, your AI guide at Autom8d. What's your name?");},300);}
+        if(kpOpen)setTimeout(function(){kpInput.focus();},350);
+      }
+      kaiFab.addEventListener('click',toggleKai); kpClose.addEventListener('click',toggleKai);
+      function addKpMsg(role,text){
+        var ini=role==='user'?((document.getElementById('email-input').value||'U')[0]).toUpperCase():'A';
+        var d=document.createElement('div'); d.className='kp-msg '+role;
+        d.innerHTML='<div class="kp-msg-av">'+ini+'</div><div class="kp-bubble">'+text+'</div>';
+        kpMsgs.appendChild(d); kpMsgs.scrollTop=kpMsgs.scrollHeight;
+      }
+      function showKpDots(){var d=document.createElement('div');d.className='kp-msg bot';d.id='kp-typing';d.innerHTML='<div class="kp-msg-av">A</div><div class="kp-bubble"><div class="kp-dots"><span></span><span></span><span></span></div></div>';kpMsgs.appendChild(d);kpMsgs.scrollTop=kpMsgs.scrollHeight;}
+      function hideKpDots(){var e=document.getElementById('kp-typing');if(e)e.remove();}
+      var kpStep=0;
+      function getReply(msg){
+        if(kpStep===0){kpData.name=msg;kpStep=1;return "Great to meet you, "+msg+"! What would you like to automate in your business?";}
+        else if(kpStep===1){kpData.interest=msg;kpStep=2;return "Love that. Businesses that automate save 10–20 hours per week, respond to leads instantly, and scale without extra staff. What's your email so we can send you early access?";}
+        else if(kpStep===2){var em=msg.match(/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/);if(em){kpData.email=em[0];kpStep=3;return kpData.name+", what's your best contact number?"}else{return "Could you double check that email? I want to make sure the team can reach you.";}}
+        else if(kpStep===3){var ph=msg.match(/[\+]?[(]?[0-9]{3}[)]?[\-\s\.]?[0-9]{3}[\-\s\.]?[0-9]{4,6}/);if(ph){kpData.phone=ph[0];kpStep=4;if(!kpData.submitted){kpData.submitted=true;fetch('https://api.web3forms.com/submit',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({access_key:'0544b877-360b-4daa-84fd-7e9cf50a5a07',subject:'New Lead via Kai Chat - Autom8d',from_name:'Kai AI Advisor',name:kpData.name,email:kpData.email,phone:kpData.phone,message:'Name: '+kpData.name+' | Email: '+kpData.email+' | Phone: '+kpData.phone+' | Interest: '+(kpData.interest||'')})}).catch(function(){});}return "Perfect, thank you "+kpData.name+"! The Autom8d team will be in touch very soon. We can't wait to show you what we're building!";}else{return "Could you share your phone number so the team can reach you directly?";}}
+        else{return "You're all set, "+kpData.name+"! The team will be in touch soon. Feel free to sign up above to stay updated.";}
+      }
+      function sendKp(){var msg=kpInput.value.trim();if(!msg)return;kpInput.value='';addKpMsg('user',msg);showKpDots();setTimeout(function(){hideKpDots();addKpMsg('bot',getReply(msg));},800);}
+      document.getElementById('kp-send').addEventListener('click',sendKp);
+      kpInput.addEventListener('keydown',function(e){if(e.key==='Enter')sendKp();});
+    });
+  </script>
+
+  <!-- KAI BUBBLE -->
+  <div id="kai-bubble">
+    <div class="kai-nudge" id="kai-nudge">
+      <div class="kai-nudge-label">Kai AI Advisor</div>
+      Got a question before we launch?
+    </div>
+    <button id="kai-fab" aria-label="Chat with Kai">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span class="kai-fab-dot"></span>
+    </button>
+  </div>
+
+  <!-- KAI PANEL -->
+  <div id="kai-panel">
+    <div class="kp-head">
+      <div class="kp-av">A</div>
+      <div class="kp-info">
+        <div class="kp-name">Kai</div>
+        <div class="kp-status">&#9679; Online now</div>
+      </div>
+      <button class="kp-close" id="kp-close">&#10005;</button>
+    </div>
+    <div class="kp-msgs" id="kp-msgs"></div>
+    <div class="kp-input-row">
+      <input class="kp-input" id="kp-input" placeholder="Ask me anything..." autocomplete="off"/>
+      <button class="kp-send" id="kp-send">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button>
+    </div>
+  </div>
+</body>
+</html>
